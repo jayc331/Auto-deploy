@@ -1,6 +1,7 @@
 {
-    "repo": "https://github.com/jayc331/test",
+    "repo": "https://github.com/<user>/<project>",
     "branch": "main",
     "start": "npm run start",
+    "setup": "npm install",
     "frequency": 5000
 }
