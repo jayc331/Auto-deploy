@@ -1,7 +1,12 @@
 # Auto-deploy
-***
 
-This is ideal for developers deploying apps to a server who wish to save time by simpy pushing new updates to a repo, and it automatically updating the program. You can use it with programs in any language theoretically, just change the setup and start commands in the config.
+This is ideal for developers on a schedule. Any changes pushed to a repo will be automatically fetched by the program, saving you time which is better spent elsewhere. In theory, it is also compatible with near enough every language, just edit the setup and start commands in the config.
+
+## Example
+
+![2KVraXIhRBik8BVrGTLf-Q](https://user-images.githubusercontent.com/105918957/175129644-bd18363c-b210-495c-834a-be82b28ac61f.png)
+
+## Installation
 
 1. Clone this Github repository using [Git](https://git-scm.com/download)
 ```
@@ -15,7 +20,7 @@ cd Auto-deploy
     "branch": "main",
     "start": "npm run start",
     "setup": "npm install",
-    "frequency": 5000
+    "frequency": 5
 }
 ```
 3. Start the script using [NodeJS](https://modejs.org/en/download)
