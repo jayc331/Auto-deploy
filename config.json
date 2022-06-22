@@ -1,0 +1,6 @@
+{
+    "repo": "https://github.com/jayc331/test",
+    "branch": "main",
+    "start": "npm run start",
+    "frequency": 5000
+}
