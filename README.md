@@ -23,7 +23,7 @@ cd Auto-deploy
     "frequency": 5
 }
 ```
-3. Start the script using [NodeJS](https://modejs.org/en/download)
+3. Start the script using [NodeJS](https://nodejs.org/en/download/)
 ```
 node index.js
 ```
