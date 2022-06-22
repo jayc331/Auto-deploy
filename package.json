@@ -1,0 +1,24 @@
+{
+  "name": "auto-deploy",
+  "version": "1.0.0",
+  "description": "Auto deploy new builds when repository is updated.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jayc331/Auto-deploy.git"
+  },
+  "keywords": [
+    "Automatic",
+    "deploy",
+    "repository"
+  ],
+  "author": "jayc331 (https://github.com/jayc331/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/jayc331/Auto-deploy/issues"
+  },
+  "homepage": "https://github.com/jayc331/Auto-deploy#readme"
+}
