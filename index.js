@@ -1,141 +1,229 @@
-const path = require("path");
-const { existsSync, rm } = require("fs")
+const { access, rm } = require("fs/promises")
 const { exec, fork } = require("child_process");
+const path = require("path");
+
 const config = require("./config.json");
 
-new class {
+let app;
 
-    constructor() {
-        this.config = config;
-        this.start();
-    }
+const dir = `${path.dirname(require.main.filename).replaceAll("\\", "/")}/`;
+const repo_dir = dir + "repo/";
 
-    async start() {
-        this.validate_config(this.config).then(() => this.scan()).catch(console.error)
-    }
+start();
 
-    async sleep(ms) {
-        return new Promise((resolve) => {
-            setTimeout(resolve, ms);
-        })
-    }
+async function start() {
 
-    get dir() {
-		return `${path.dirname(require.main.filename).replaceAll("\\", "/")}/`;
-	}
+    validate_config(config)
+        
+        .then(() => scan())
+        
+        .catch(console.error);
 
-    get repo_dir() {
-		return this.dir + "repo/";
-	}
+}
 
-    get_repo_name(url = this.config.repo) {
-        const match = url.match(/(https?:\/{2}github\.com\/.+?\/([^\/]+))\/?/);
-        if (match) return match[1];
-        else throw "[@] Repository not provided or does not match expected format.";
-    }
+async function sleep(ms) {
 
-    async get_version(cwd = this.repo_dir, remote = false) {
-        return this.execute(`git rev-parse --short --verify ${remote ? "origin/" : ""}${this.config.branch}`, { cwd }).catch(console.warn);
-    }
+    return new Promise((resolve) => setTimeout(resolve, ms));
 
-    async validate_config() {
-        const repo = this.config.repo.match(/(https?:\/{2}github\.com\/.+?\/([^\/]+))\/?/);
-        if (!this.config.repo) throw "[@] Github repository not provided!";
-        else this.config.repo = repo[1];
+}
 
-        if (!this.config.branch) throw "[@] Github branch not provided!";
-        if (!this.config.start) throw "[@] Start command not provided!";
-        if (!this.config.setup) console.warn("[!] Setup command not provided.");
 
-        if (this.config.frequency > 1000) console.warn("[!] The scan frequency should be in seconds. The value provided is VERY HIGH!")
-    }
+async function get_version(cwd = repo_dir, remote = false) {
 
-    match_version(cwd = this.repo_dir) {
-        return new Promise(async (resolve, reject) => {
-            await this.execute("git remote update", { cwd }).catch((res) => console.log("[-] " + res.split("\n")[1].trim()))
-            const remote = await this.get_version(cwd, true)
-            const local = await this.get_version(cwd, false)
-            if (remote === local) resolve("[-] Local repository matches origin.")
-            else reject("[!] Local repository does not match origin.")
-        })
-    }
+    return execute(`git rev-parse --short --verify ${remote ? "origin/" : ""}${config.branch}`, { cwd });
 
-    match_origin(cwd = this.repo_dir) {
-        return new Promise((resolve, reject) => {
-            this.execute("git remote get-url origin", { cwd }).catch(console.error)
-            .then((origin) => {
-                if (origin === this.config.repo) resolve("[-] Local repository matches origin.")
-                else reject("[!] Local repository does not match origin.")
-            })
-        })
-    }
+}
 
-    async fork_app(cwd = this.repo_dir) {
-        if (this.app && !this.app?.killed) throw "[-] App already alive!"
-        console.log("[.] Preparing environment.")
-        await this.execute("npm install", { cwd }).catch(console.warn);
-        console.log("[.] Initialising fork.")
-        return this.app = fork(cwd, this.config.start.split(/ +/g));
-    }
+
+async function validate_config() {
+
+    const repo = config.repo.match(/(https?:\/{2}github\.com\/.+?\/([^\/]+))\/?/);
+
+    if (!config.repo) throw new Error("[@] Github repository not provided!")
+
+    else config.repo = repo[1];
+
+    if (!config.branch) throw new Error("[@] Github branch not provided!");
+
+    if (!config.start) throw new Error("[@] Start command not provided!");
+
+    if (!config.setup) console.warn("[!] Setup command not provided.");
+
+    if (config.frequency > 1000) console.warn("[!] The scan frequency should be in seconds. The value provided is VERY HIGH!");
+
+    return true;
+}
+
+
+async function match_version(cwd = repo_dir) {
+
+    await execute("git remote update", { cwd })
+        
+        .catch((res) => console.log("[-] " + res.split("\n")[1].trim()));
+
+    const remote = await get_version(cwd, true), local = await get_version(cwd, false);
     
-    async clone(repo = this.config.repo, cwd = this.dir) {
-        return this.execute(`git clone ${repo} repo`, { cwd }).then(console.log);
-    }
+    return remote === local;
+}
 
-    async execute(command, options = {}) {
-        return new Promise((resolve, reject) => {
-            // console.log(`Executing '${command}'...`);
-            exec(command, options, (err, stdout, stderr) => {
-                if (err) reject(err)
+
+async function match_origin(cwd = repo_dir) {
+
+    const origin = await execute("git remote get-url origin", { cwd })
+    
+        .catch(console.error);
+
+    return config.repo === origin;
+
+}
+
+
+async function fork_app(cwd = repo_dir) {
+
+    if (app && !app?.killed) return console.warn("[!] App has already been terminated.");
+
+    console.log("[.] Preparing environment.");
+
+    await execute("npm install", { cwd })
+
+        .then(() => {
+
+            if (config.verbose) console.log("[+] Environment avaialble for use.")
+
+        })
+    
+        .catch(console.warn);
+
+    console.log("[.] Initialising child process.");
+
+    return app = fork(cwd, config.start.split(/ +/g)).addListener("spawn", () =>  console.log("[+] Process spawned successfully."));
+
+}
+
+
+async function clone(repo = config.repo, cwd = dir) {
+
+    return execute(`git clone ${repo} repo`, { cwd });
+
+}
+
+
+function execute(command, options = {}) {
+
+    return new Promise((resolve, reject) => {
+
+        if (config.verbose) console.log("Executing:", command)
+
+        exec(command, options,
+            
+            (err, stdout, stderr) => {
+
+                if (err) reject(err);
+
                 else if (stderr) reject(stderr);
+
                 else resolve(stdout.trim());
+
+            });
+
+    });
+
+}
+
+
+function remove_dir(dir = repo_dir) {
+
+    return new Promise(async (resolve, reject) => {
+
+        rm(dir, { recursive: true, force: true },
+
+            (err) => {
+
+                if (err) reject(err);
+
             })
-        })
-    }
 
-    remove_dir(dir = this.repo_dir) {
-        return new Promise((resolve, reject) => {
-            if (this.repo_exists(this.repo_dir)) {
-                rm(dir, { recursive: true, force: true }, (err) => {
-                    if (err) reject(err);
-                    else resolve("[+] Successfully removed existing repository.")
-                });
-            }
-            else resolve("[!] Repository folder not found.")
-        })
-    }
+            .then(() => resolve(true))
 
-    repo_exists(dir = this.repo_dir) {
-        return existsSync(dir);
-    }
+    })
 
-    async reset_app() {
-        if (this.app && !this.app.killed) {
-            if (this.app.kill()) console.log("[+] App terminated successfully.")
-            else console.warn("[!] Something went wrong while terminating app.")
-        }
-        await this.remove_dir().then(console.log).catch(console.error)
-        console.log("[.] Cloning up-to-date repository.")
-        await this.clone(this.config.repo).then(() => console.log("[+] Repository cloned successfully.")).catch(() => {});
-    }
+}
 
-    async scan() {
-        if (!this.repo_exists()) await this.reset_app();
-        else {
-            await this.match_origin(this.repo_dir)
-            .catch(async (res) => {
-                console.log(res);
-                await this.reset_app();
-            })
-            .then(async () => await this.match_version().catch(async (res) => {
-                console.warn(res);
-                await this.reset_app();
-            }))
+
+function repo_exists(dir = repo_dir) {
+
+    return new Promise((resolve) => {
+
+        access(dir)
+        
+            .then(() => resolve(true))
+
+            .catch(() => {
+
+                console.warn("[!] Repository folder not found.");
+
+                resolve(false);
+
+            });
+
+    })
+
+}
+
+
+async function reset_app() {
+
+    if (app && !app.killed) {
+
+        console.log("[.] Attempting app termination.");
+
+        if (app.kill()) {
+            
+            if (config.verbose) console.log("[+] App terminated successfully.");
+
         }
 
-        await this.fork_app().catch(() => {})
+        else throw new Error("[@] Something went wrong while terminating app.");
 
-        return this.sleep(this.config.frequency * 1000).then(() => this.scan())
     }
 
-}()
+    if (config.verbose) console.log("[.] Removing remaining files.");
+
+    await remove_dir()
+
+        .then(() => {
+            
+            if (config.verbose) console.log("[+] Outdated files removed.");
+            
+        })
+
+        .catch(new Error);
+
+    console.log("[.] Cloning up-to-date repository.");
+
+    await clone(config.repo)
+
+        .catch(() => {
+            
+            if (config.verbose) console.log("[+] Repository cloned successfully.")
+            
+        })
+
+}
+
+
+async function scan() {
+
+    if (!await repo_exists()) await reset_app();
+
+    else if (!await match_origin() || !await match_version()) await reset_app();
+
+    else if (config.verbose) console.debug("[+] Your branch is on the latest commit.")
+
+    if (!app || app.killed) await fork_app();
+
+    return sleep(config.frequency * 1000)
+    
+        .then(() => scan());
+
+}
