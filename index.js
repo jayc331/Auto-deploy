@@ -88,13 +88,15 @@ async function fork_app(cwd = repo_dir) {
 
         .then(() => {
 
-            if (config.verbose) console.log("[+] Environment avaialble for use.")
+            if (config.verbose) console.log("[+] Environment ready for runtime.")
 
         })
     
         .catch(console.warn);
 
     console.log("[.] Initialising child process.");
+
+    if (config.verbose) console.log(`Executing: ${config.start.trim()}`);
 
     return app = fork(cwd, config.start.split(/ +/g)).addListener("spawn", () =>  console.log("[+] Process spawned successfully."));
 
@@ -187,7 +189,7 @@ async function reset_app() {
 
     }
 
-    if (config.verbose) console.log("[.] Removing remaining files.");
+    if (config.verbose) console.log("[.] Clearing remnants.");
 
     await remove_dir()
 
