@@ -84,7 +84,7 @@ async function fork_app(cwd = repo_dir) {
 
     console.log("[.] Preparing environment.");
 
-    await execute("npm install", { cwd })
+    await execute(config.setup, { cwd })
 
         .then(() => {
 
