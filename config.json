@@ -3,5 +3,6 @@
     "branch": "main",
     "start": "npm run start",
     "setup": "npm install",
-    "frequency": 5
+    "frequency": 5,
+    "verbose": false
 }
