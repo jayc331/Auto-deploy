@@ -1,6 +1,6 @@
 {
   "name": "auto-deploy",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Auto deploy new builds when repository is updated.",
   "main": "index.js",
   "scripts": {
