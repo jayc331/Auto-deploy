@@ -20,7 +20,8 @@ cd Auto-deploy
     "branch": "main",
     "start": "npm run start",
     "setup": "npm install",
-    "frequency": 5
+    "frequency": 5,
+    "verbose": false
 }
 ```
 3. Start the script using [NodeJS](https://nodejs.org/en/download/)
