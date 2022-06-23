@@ -4,7 +4,7 @@ This is ideal for developers on a schedule. Any changes pushed to a repo will be
 
 ## Example
 
-![2KVraXIhRBik8BVrGTLf-Q](https://user-images.githubusercontent.com/105918957/175129644-bd18363c-b210-495c-834a-be82b28ac61f.png)
+![image](https://user-images.githubusercontent.com/105918957/175330044-fed8608e-e3c2-4b8d-9ab6-48b0fedcef71.png)
 
 ## Installation
 
